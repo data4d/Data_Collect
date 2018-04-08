@@ -87,7 +87,7 @@ while True:
         break_time = break_time*2
         time.sleep(break_time)
         if break_time > 600:
-            send_mail(email_account,'EMAIL@gmail.com',email_password,"Twitter Script Down","Something is wrong with the Twitter Processing script")
+            send_mail(email_account,'EMAIL@gmail.com',email_password,"Venmo Script Down","Something is wrong with the Venmo Processing Script")
 
     
         
