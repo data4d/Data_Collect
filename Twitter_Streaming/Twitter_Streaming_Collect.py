@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Python Script to Connect to the Twitter Streaming API
-# Taylor C - 4/5\8/2018
+# Taylor C - 4/8/2018
 
 ## This script allows us to connect to Twitter's Streaming API and store the data in GZIP JSON format for processing at a later date.
 
@@ -104,7 +104,7 @@ while True:
             # Handle Errors Passes by the API
             print("Unexpected error:", sys.exc_info()[0])
             if break_time > 600:
-                send_mail(email_account,'g.taylor.corbett@gmail.com',email_password,"Twitter Script Down","The Twitter Processing script has gone down")
+                send_mail(email_account,'EMAIL@gmail.com',email_password,"Twitter Script Down","The Twitter Processing script has gone down")
             break_time = break_time*2
             time.sleep(break_time)
 
@@ -114,7 +114,7 @@ while True:
         break_time = break_time*2
         time.sleep(break_time)
         if break_time > 600:
-            send_mail(email_account,'g.taylor.corbett@gmail.com',email_password,"Twitter Script Down","Something is wrong with the Twitter Processing script")
+            send_mail(email_account,'EMAIL@gmail.com',email_password,"Twitter Script Down","Something is wrong with the Twitter Processing script")
         iterator = twitter_stream.statuses.sample()
         
     except:
