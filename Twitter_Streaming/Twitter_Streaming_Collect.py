@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Python Script to Connect to the Twitter Streaming API
-# Taylor C - 3/5/2018
+# Taylor C - 4/5\8/2018
 
 ## This script allows us to connect to Twitter's Streaming API and store the data in GZIP JSON format for processing at a later date.
 
@@ -42,54 +42,84 @@ iterator = twitter_stream.statuses.sample()
 file_date = datetime.date.today()
 outfilename = 'Twitter_Random_'+str(file_date)+".json.gz"
 iterfiles = os.listdir()
-tweet_count = 0
 
+# Setting Tweet Counter as well as Break Time
+tweet_count = 0
+break_time = 10
+
+# Opening a new file or appending to an existing file
 if outfilename in iterfiles:
     output = gzip.open(outfilename, 'a')
 
 else:
     output = gzip.open(outfilename, 'wb')
 
+# Tweet stream iterator
+while True:
 
-for tweet in iterator:
+    for tweet in iterator:
+        try:
+            
+            #Get the current date (to compare to the tweet date)
+            current_date = datetime.date.today()
+            
+            # If this is a entry refers to a deleted tweet, don't save to the file. Else write the tweet to the GZIP JSON file.
+            if "delete" in tweet.keys():
+                pass
+
+            else:
+                output.write(json.dumps(tweet).encode('utf-8'))
+                output.write('\n'.encode('utf-8'))
+                tweet_count += 1
+
+            # To track progress, print the number of tweets collected every 10,000 tweets
+            if tweet_count%100 == 0:
+                print(str(tweet_count)+" Tweets Collected Today")
+                #output.close()
+                #break
+
+            # If the current date is different than the tweet date, close the existing file, reset the tracking values and open a new file
+            if current_date != file_date:
+
+                # Close the existing output file
+                output.close()
+
+                # Open the data logging file and write the number of records captured to the file
+                data_log = open('Twitter_Data_Log.csv','a')
+                data_log.write(str(file_date)+","+str(tweet_count))
+                data_log.write('\n')
+                data_log.close()
+
+                # Open a new output file
+                file_date = current_date
+                tweet_count = 0
+                outfilename = 'Twitter_Random_'+str(file_date)+".json.gz"
+                output = gzip.open(outfilename, 'wb')
+
+                # Reset the break time
+                break_time = 10
+
+        except:
+            
+            # Handle Errors Passes by the API
+            print("Unexpected error:", sys.exc_info()[0])
+            if break_time > 600:
+                send_mail(email_account,'g.taylor.corbett@gmail.com',email_password,"Twitter Script Down","The Twitter Processing script has gone down")
+            break_time = break_time*2
+            time.sleep(break_time)
+
+    # Handle Errors if the internet connection dies or the API temporarily goes down
     try:
-        current_date = datetime.date.today()
-        if "delete" in tweet.keys():
-            pass
-
-        else:
-            output.write(json.dumps(tweet).encode('utf-8'))
-            output.write('\n'.encode('utf-8'))
-            tweet_count += 1
-            #output.write(json.dumps(tweet))
-
-        if tweet_count%10000 == 0:
-            print(str(tweet_count)+" Tweets Collected Today")
-            #output.close()
-            #break
-
-        if current_date != file_date:
-            
-            # Close the existing output file
-            output.close()
-            
-            # Open the data logging file and write the number of records captured to the file
-            data_log = open('Twitter_Data_Log.csv','a')
-            data_log.write(str(file_date)+","+str(tweet_count))
-            data_log.write('\n')
-            data_log.close()
-            
-            # Open a new output file
-            file_date = current_date
-            tweet_count = 0
-            outfilename = 'Twitter_Random_'+str(file_date)+".json.gz"
-            output = gzip.open(outfilename, 'wb')
+        print("WARNING: API Connection has been lost")
+        break_time = break_time*2
+        time.sleep(break_time)
+        if break_time > 600:
+            send_mail(email_account,'g.taylor.corbett@gmail.com',email_password,"Twitter Script Down","Something is wrong with the Twitter Processing script")
+        iterator = twitter_stream.statuses.sample()
         
     except:
-        print("Unexpected error:", sys.exc_info()[0])
-        send_mail(email_account,'EMAIL_HERE@gmail.com',email_password,"Twitter Script Down","The Twitter Processing script has gone down")
-        break
+        print("WARNING: API Connection has been lost")
+        break_time = break_time*2
+        time.sleep(break_time)
 
-# The script should never reach this point, if so something has gone wrong
-send_mail(email_account,'EMAIL_HERE@gmail.com',email_password,"Twitter Script Down","Something is wrong with the Twitter Processing script")
-break
+        
